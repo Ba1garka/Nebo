@@ -1,5 +1,6 @@
 package com.example.nebo.view
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
@@ -19,7 +20,8 @@ import java.time.LocalDate
 import java.util.Calendar
 
 class RegisterFragment : Fragment() {
-    private lateinit var binding: FragmentRegisterBinding
+    private var binding: FragmentRegisterBinding? = null
+    private val bind get() = binding!!
     private val viewModel: AuthViewModel by viewModels()
     private var selectedDate: LocalDate? = null
 
@@ -29,33 +31,43 @@ class RegisterFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentRegisterBinding.inflate(inflater, container, false)
-        return binding.root
+        return bind.root
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.birthDateEditText.setOnClickListener {
+        bind.birthDateEditText.setOnClickListener {
             showDatePicker()
         }
 
-        binding.registerButton.setOnClickListener {
-            val email = binding.emailEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
-            val name = binding.nameEditText.text.toString()
+        bind.registerButton.setOnClickListener {
+//            val email = bind.emailEditText.text.toString()
+//            val password = bind.passwordEditText.text.toString()
+//            val name = bind.nameEditText.text.toString()
+            with(bind) {
+                val email = emailEditText.text.toString()
+                val password = passwordEditText.text.toString()
+                val name = nameEditText.text.toString()
 
-            if (email.isBlank() || password.isBlank() || name.isBlank() || selectedDate == null) {
-                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+
+                if (email.isBlank() || password.isBlank() || name.isBlank() || selectedDate == null) {
+                    Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                if (password.length < 6) {
+                    Toast.makeText(
+                        context,
+                        "Password must be at least 6 characters",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnClickListener
+                }
+
+                viewModel.register(email, password, name, selectedDate!!)
             }
-
-            if (password.length < 6) {
-                Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            viewModel.register(email, password, name, selectedDate!!)
         }
 
         viewModel.registerResult.observe(viewLifecycleOwner) { result ->
@@ -75,14 +87,14 @@ class RegisterFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("NewApi")
     private fun showDatePicker() {
         val now = Calendar.getInstance()
         DatePickerDialog(
             requireContext(),
             { _, year, month, day ->
                 selectedDate = LocalDate.of(year, month + 1, day)
-                binding.birthDateEditText.setText(selectedDate!!.toString())
+                bind.birthDateEditText.setText(selectedDate!!.toString())
             },
             now.get(Calendar.YEAR),
             now.get(Calendar.MONTH),

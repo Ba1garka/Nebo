@@ -91,4 +91,6 @@ dependencies {
 
     implementation(libs.circleimageview)
 
+    implementation(libs.jaredrummler.colorpicker)  // Основная библиотека
+
 }

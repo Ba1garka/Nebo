@@ -13,4 +13,9 @@
         android:icon="@drawable/baseline_brush_24"
         android:title="Canvas"
         android:iconTint="@color/mdtp_dark_gray"/>
+    <item
+        android:id="@+id/exit"
+        android:icon="@drawable/ic_exit"
+        android:title="Logout"
+        android:iconTint="@color/mdtp_dark_gray"/>
 </menu>

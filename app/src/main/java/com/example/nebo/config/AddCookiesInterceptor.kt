@@ -9,7 +9,7 @@ import java.util.HashSet
 
 
 class AddCookiesInterceptor(private val context: Context) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
+    override fun intercept(chain: Interceptor.Chain): Response { //Chain - цепочка запросов
         val request = chain.request()
         val builder = request.newBuilder()
 

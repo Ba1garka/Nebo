@@ -20,7 +20,8 @@ import com.google.android.material.snackbar.Snackbar
 
 
 class PostsFragment : Fragment() {
-    private lateinit var binding: FragmentPostsBinding
+    private var binding: FragmentPostsBinding? = null
+    private val bind get() = binding!!
     private val viewModel: PostViewModel by viewModels()
     private val drawingsViewModel: DrawingsViewModel by viewModels()
 
@@ -33,17 +34,15 @@ class PostsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentPostsBinding.inflate(inflater, container, false)
-        return binding.root
+        return bind.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Загружаем рисунки пользователя
         drawingsViewModel.loadUserDrawings()
 
-        // Кнопка добавления нового поста
-        binding.fabAddPost.setOnClickListener {
+        bind.fabAddPost.setOnClickListener {
             showDrawingSelectionDialog()
         }
 
@@ -56,7 +55,7 @@ class PostsFragment : Fragment() {
         adapter = PostsAdapter { postId, isLiked ->
             viewModel.toggleLike(postId, isLiked)
         }
-        binding.postsRecyclerView.apply {
+        bind.postsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@PostsFragment.adapter
             addItemDecoration(
@@ -66,8 +65,7 @@ class PostsFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        //наблюдаем за выводом постов
-        viewModel.posts.observe(viewLifecycleOwner) { result ->
+        viewModel.postsResult.observe(viewLifecycleOwner) { result ->
             when {
                 result.isSuccess -> {
                     val posts = result.getOrNull()!!
@@ -82,14 +80,13 @@ class PostsFragment : Fragment() {
                     showError(result.exceptionOrNull()?.message ?: "Error loading posts")
                 }
             }
-            binding.swipeRefresh.isRefreshing = false
+            bind.swipeRefresh.isRefreshing = false
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
+            bind.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
 
-        // Наблюдаем за результатом создания поста
         viewModel.createPostResult.observe(viewLifecycleOwner) { result ->
             when {
                 result.isSuccess -> {
@@ -102,7 +99,6 @@ class PostsFragment : Fragment() {
             }
         }
 
-        // Наблюдаем за списком рисунков
         drawingsViewModel.drawingsResult.observe(viewLifecycleOwner) { result ->
             if (result.isSuccess) {
                 val drawings = result.getOrNull()!!
@@ -112,7 +108,6 @@ class PostsFragment : Fragment() {
             }
         }
 
-        //наблюдаем за лайками
         viewModel.likeActionResult.observe(viewLifecycleOwner) { result ->
             when {
                 result.isFailure -> {
@@ -128,8 +123,7 @@ class PostsFragment : Fragment() {
     }
 
     private fun showEmptyState(show: Boolean) {
-        //binding.emptyStateView.visibility = if (show) View.VISIBLE else View.GONE
-        binding.postsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        bind.postsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
     }
 
     private fun showError(message: String) {
@@ -150,7 +144,7 @@ class PostsFragment : Fragment() {
                     .setAdapter(
                         ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1,
                         drawings.map { it.title })
-                    ) { dialog, which ->
+                    ) { _, which ->
                         selectedDrawingId = drawings[which].id
                         showDescriptionInputDialog()
                     }
@@ -183,5 +177,10 @@ class PostsFragment : Fragment() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
     }
 }

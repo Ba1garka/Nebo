@@ -2,9 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="divider_color">#00BCD4</color>
+    <color name="divider_color">#00D4BF</color>
     <color name="purple_500">#7F42F6</color>
-    <color name="blue">#5752FA</color>
+    <color name="blue">#4B31A9</color>
     <color name="purple_100">#AA86F8</color>
     <color name="red">#E91E63</color>
     <color name="gray">#DCDCDC</color>

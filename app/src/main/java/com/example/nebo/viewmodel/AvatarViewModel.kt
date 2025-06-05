@@ -13,10 +13,10 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
 class AvatarViewModel(application: Application) : AndroidViewModel(application) {
-    private val apiService = ApiService.create("http://10.0.2.2:8082/", application)
+    private val apiService = ApiService.create( application)
 
-    private val _uploadResult = MutableLiveData<Result<String>>()
-    val uploadResult: LiveData<Result<String>> = _uploadResult
+    private val upload = MutableLiveData<Result<String>>()
+    val uploadResult: LiveData<Result<String>> = upload
 
     fun uploadAvatar(file: File) {
         viewModelScope.launch {
@@ -27,12 +27,12 @@ class AvatarViewModel(application: Application) : AndroidViewModel(application) 
                 val response = apiService.uploadAvatar(part)
                 if (response.isSuccessful) {
                     val avatarUrl = response.body()?.get("avatarUrl")
-                    _uploadResult.value = Result.success(avatarUrl ?: "")
+                    upload.value = Result.success(avatarUrl ?: "")
                 } else {
-                    _uploadResult.value = Result.failure(Exception("Failed to upload avatar"))
+                    upload.value = Result.failure(Exception("Failed to upload avatar"))
                 }
             } catch (e: Exception) {
-                _uploadResult.value = Result.failure(e)
+                upload.value = Result.failure(e)
             }
         }
     }

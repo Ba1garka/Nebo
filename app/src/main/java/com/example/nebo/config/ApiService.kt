@@ -23,17 +23,17 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface ApiService {
-    @POST("api/auth/login")
+    @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<ResponseBody>
 
-    @POST("api/auth/register")
+    @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<ResponseBody>
 
-    @GET("api/auth/me")
+    @GET("auth/me")
     suspend fun getCurrentUser(): Response<Map<String, Any>>
 
     companion object {
-        fun create(baseUrl: String, context: Context): ApiService {
+        fun create( context: Context): ApiService {
             val client = OkHttpClient.Builder()
                 .addInterceptor(AddCookiesInterceptor(context))
                 .addInterceptor(ReceivedCookiesInterceptor(context))
@@ -43,7 +43,7 @@ interface ApiService {
                 .build()
 
             return Retrofit.Builder()
-                .baseUrl(baseUrl)
+                .baseUrl("http://10.0.2.2:8082/")
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
@@ -52,25 +52,28 @@ interface ApiService {
     }
 
     @Multipart
-    @POST("api/drawings/upload")
+    @POST("drawings/upload")
     suspend fun uploadDrawing(@Part file: MultipartBody.Part): Response<DrawingResponse>
 
-    @GET("api/drawings/my")
+    @GET("drawings/my")
     suspend fun getUserDrawings(): Response<List<DrawingResponse>>
 
-    @POST("api/drawings/post")
+    @POST("drawings/post")
     suspend fun createPost(@Body request: CreatePostRequest): Response<PostResponse>
 
-    @GET("api/drawings/all")
+    @GET("drawings/all")
     suspend fun getAllPosts(): Response<List<PostResponse>>
 
-    @POST("/api/drawings/like/{postId}")
+    @POST("/drawings/like/{postId}")
     suspend fun likePost(@Path("postId") postId: Long): Response<PostResponse>
 
-    @POST("/api/drawings/unlike/{postId}")
+    @POST("/drawings/unlike/{postId}")
     suspend fun unlikePost(@Path("postId") postId: Long): Response<PostResponse>
 
     @Multipart
-    @POST("api/auth/avatar")
+    @POST("auth/avatar")
     suspend fun uploadAvatar(@Part file: MultipartBody.Part): Response<Map<String, String>>
+
+    @POST("/auth/logout")
+    suspend fun logout(): Response<Unit>
 }

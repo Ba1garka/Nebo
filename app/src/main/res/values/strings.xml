@@ -1,9 +1,23 @@
 <resources>
     <string name="app_name">Nebo</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="no_posts_available">Нет доступных рисунков(</string>
     <string name="add_post">Пост</string>
     <string name="like">Like</string>
     <string name="create_new" />
+    <string name="brush_size">Brush Size</string>
+    <string name="brush_alpha">Opacity</string>
+    <string name="brush_blur">Blur</string>
+    <string name="cap_style">Cap Style</string>
+    <string name="texture">Texture</string>
+    <string name="round">Round</string>
+    <string name="square">Square</string>
+    <string name="butt">Butt</string>
+    <string name="solid">Solid</string>
+    <string name="texture1">Grain</string>
+    <string name="texture2">Hatch</string>
+    <string name="clear_confirmation">Clear canvas?</string>
+    <string name="clear">Clear</string>
+    <string name="cancel">Cancel</string>
+    <string name="size_default">size_default</string>
 </resources>

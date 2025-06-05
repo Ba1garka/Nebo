@@ -14,7 +14,8 @@ import com.example.nebo.databinding.FragmentLoginBinding
 import com.example.nebo.viewmodel.AuthViewModel
 
 class LoginFragment : Fragment() {
-    private lateinit var binding: FragmentLoginBinding
+    private var binding: FragmentLoginBinding? = null
+    private val bind get()= binding!!
     private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
@@ -23,15 +24,15 @@ class LoginFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentLoginBinding.inflate(inflater, container, false)
-        return binding.root
+        return bind.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.loginButton.setOnClickListener {
-            val email = binding.emailEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
+        bind.loginButton.setOnClickListener {
+            val email = bind.emailEditText.text.toString()
+            val password = bind.passwordEditText.text.toString()
 
             if (email.isBlank() || password.isBlank()) {
                 Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
@@ -41,14 +42,13 @@ class LoginFragment : Fragment() {
             viewModel.login(email, password)
         }
 
-        binding.registerButton.setOnClickListener {
+        bind.registerButton.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
 
         viewModel.loginResult.observe(viewLifecycleOwner) { result ->
             when {
                 result.isSuccess -> {
-                    // Show bottom navigation and navigate to profile
                     (activity as? MainActivity)?.showBottomNavigation()
                     findNavController().navigate(R.id.action_loginFragment_to_profileFragment)
                 }
@@ -61,5 +61,10 @@ class LoginFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
     }
 }

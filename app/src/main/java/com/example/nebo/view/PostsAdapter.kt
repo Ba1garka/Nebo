@@ -18,20 +18,18 @@ class PostsAdapter(private val onLikeClick: (Long, Boolean) -> Unit) : ListAdapt
 
         fun bind(post: PostResponse) {
             with(binding) {
-                // Заполнение данных поста
                 authorName.text = post.authorName
                 postDescription.text = post.description
                 likesCount.text = post.likesCount.toString()
-                //likeButton.isSelected = post.isLikedByCurrentUser
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    postDate.text = post.createdAt
+                    postDate.text = post.formatCreatedAt()
+                    Log.i("DATE","date:"+ post.formatCreatedAt())
                 }
 
                 val postUrl = post.drawingUrl?.substringBefore('?')?.replace("http://localhost", "http://10.0.2.2")
                 val avatar = post.authorAvatarUrl?.substringBefore('?')?.replace("http://localhost", "http://10.0.2.2")
 
-                // Загрузка изображений
                 Glide.with(root)
                     .load(avatar)
                     .circleCrop()
@@ -48,7 +46,6 @@ class PostsAdapter(private val onLikeClick: (Long, Boolean) -> Unit) : ListAdapt
                         Log.i("LIKE", "islikebyUser" + post.isLikedByCurrentUser.toString() + "newLikeState" + newLikeState.toString())
                         isSelected = newLikeState
                         onLikeClick(post.id, newLikeState)
-                        // Оптимистичное обновление UI
                         likesCount.text = post.likesCount.toString()
                     }
                 }

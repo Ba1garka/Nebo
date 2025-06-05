@@ -13,33 +13,33 @@ import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
 
 class CanvasViewModel(application: Application) : AndroidViewModel(application) {
-    private val apiService = ApiService.create("http://10.0.2.2:8082/", getApplication())
+    private val apiService = ApiService.create( application)
 
-    private val _uploadResult = MutableLiveData<Result<DrawingResponse>>()
-    val uploadResult: LiveData<Result<DrawingResponse>> = _uploadResult
+    private val upload = MutableLiveData<Result<DrawingResponse>>()
+    val uploadResult: LiveData<Result<DrawingResponse>> = upload
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    private val load = MutableLiveData<Boolean>()
+    val loading: LiveData<Boolean> = load
 
     fun uploadDrawing(filePart: MultipartBody.Part) {
-        _isLoading.value = true
+        load.value = true
         viewModelScope.launch {
             try {
                 val response = apiService.uploadDrawing(filePart)
                 if (response.isSuccessful) {
                     response.body()?.let { body ->
-                        _uploadResult.value = Result.success(body)
+                        upload.value = Result.success(body)
                     } ?: run {
-                        _uploadResult.value = Result.failure(Exception("Empty response body"))
+                        upload.value = Result.failure(Exception("Empty response body"))
                     }
                 } else {
                     val errorMsg = response.errorBody()?.string() ?: "Unknown error"
-                    _uploadResult.value = Result.failure(Exception("Server error: $errorMsg"))
+                    upload.value = Result.failure(Exception("Server error: $errorMsg"))
                 }
             } catch (e: Exception) {
-                _uploadResult.value = Result.failure(e)
+                upload.value = Result.failure(e)
             } finally {
-                _isLoading.value = false
+                load.value = false
             }
         }
     }

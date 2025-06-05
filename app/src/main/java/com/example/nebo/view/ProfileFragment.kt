@@ -8,10 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -21,20 +18,16 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.core.net.toFile
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-
-import com.example.nebo.R
 import com.example.nebo.databinding.FragmentProfileBinding
-import com.example.nebo.model.DrawingResponse
+import com.example.nebo.viewmodel.AuthViewModel
 import com.example.nebo.viewmodel.AvatarViewModel
 import com.example.nebo.viewmodel.DrawingsViewModel
-import com.example.nebo.viewmodel.UserViewModel
-import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -43,22 +36,19 @@ import java.util.Locale
 
 
 class ProfileFragment : Fragment() {
-    private lateinit var binding: FragmentProfileBinding
-    private val viewModel: UserViewModel by viewModels()
+    private var binding: FragmentProfileBinding? = null
+    private val bind get() = binding!!
+    private val viewModel: AuthViewModel by viewModels()
     private val viewModelDrawing: DrawingsViewModel by viewModels()
     private lateinit var adapter: DrawingsAdapter
     private val avatarViewModel: AvatarViewModel by viewModels()
-
     private var currentPhotoUri: Uri? = null
 
-    // Лаунчер для камеры
     private val cameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
+    ) { success ->
+        if (success) {
             dispatchTakePictureIntent()
-        } else {
-            showError("Camera permission is required to take photos")
         }
     }
 
@@ -72,13 +62,9 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    // Лаунчер для галереи
-    private val galleryLauncher = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri ->
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { uploadPhotoFromUri(it) }
     }
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -86,19 +72,44 @@ class ProfileFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentProfileBinding.inflate(inflater, container, false)
-        return binding.root
+        return bind.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         viewModel.loadUserData()
+        setupRecyclerView()
+        setupObservers()
+        viewModelDrawing.loadUserDrawings()
 
-        viewModel.userData.observe(viewLifecycleOwner) { result ->
+        bind.updatePhotoButton.setOnClickListener{
+            showImagePickerDialog()
+        }
+    }
+
+    private fun setupObservers() {
+        viewModelDrawing.drawingsResult.observe(viewLifecycleOwner) { result ->
+            when {
+                result.isSuccess -> {
+                    val drawings = result.getOrNull()!!
+                    if (drawings.isEmpty()) {
+                        Toast.makeText(requireContext(),"У вас пока нет рисунков",Toast.LENGTH_LONG).show()
+                    } else {
+                        adapter.submitList(drawings)
+                    }
+                }
+                result.isFailure -> {
+                    showError(result.exceptionOrNull()?.message ?: "Failed to load drawings")
+                }
+            }
+        }
+
+        viewModel.userDataResult.observe(viewLifecycleOwner) { result ->
             when {
                 result.isSuccess -> {
                     val user = result.getOrNull()!!
-                    with(binding) {
+                    with(bind) {
                         nameTextView.text = user.name
                         emailTextView.text = user.email
                         birthDateTextView.text = user.birthDate
@@ -127,15 +138,13 @@ class ProfileFragment : Fragment() {
             when {
                 result.isSuccess -> {
                     val avatarUrl = result.getOrNull()!!
-                    // Обновляем аватарку
-                    val avatar = avatarUrl.substringBefore('?')?.replace("http://localhost", "http://10.0.2.2")
+                    val avatar = avatarUrl.substringBefore('?').replace("http://localhost", "http://10.0.2.2")
 
                     Glide.with(this)
                         .load(avatar)
                         .circleCrop()
-                        .into(binding.avatarImageView)
+                        .into(bind.avatarImageView)
 
-                    // Обновляем данные пользователя
                     viewModel.loadUserData()
                 }
                 result.isFailure -> {
@@ -143,42 +152,11 @@ class ProfileFragment : Fragment() {
                 }
             }
         }
-
-        setupRecyclerView()
-        setupObservers()
-        viewModelDrawing.loadUserDrawings()
-
-        binding.avatarImageView.setOnClickListener{
-            showImagePickerDialog()
-        }
-    }
-
-    private fun setupObservers() {
-        viewModelDrawing.drawingsResult.observe(viewLifecycleOwner) { result ->
-            when {
-                result.isSuccess -> {
-                    val drawings = result.getOrNull()!!
-                    if (drawings.isEmpty()) {
-                        //showEmptyState()
-                        Toast.makeText(requireContext(),"У вас пока нет рисунков",Toast.LENGTH_LONG).show()
-                    } else {
-                        updateDrawingsList(drawings)
-                    }
-                }
-                result.isFailure -> {
-                    showError(result.exceptionOrNull()?.message ?: "Failed to load drawings")
-                }
-            }
-        }
-
-        viewModelDrawing.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            //binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
     }
 
     private fun setupRecyclerView() {
         adapter = DrawingsAdapter()
-        binding.drawingsRecyclerView.apply {
+        bind.drawingsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = this@ProfileFragment.adapter
             addItemDecoration(
@@ -187,29 +165,19 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun updateDrawingsList(drawings: List<DrawingResponse>) {
-        // Обновление RecyclerView или другого UI
-        adapter.submitList(drawings)
-    }
-
     private fun showError(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
         Log.e("DrawingsFragment", message)
     }
 
-    private fun checkCameraPermissionAndLaunch() {
+    private fun cameraPermission() {
         when {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.CAMERA
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED -> {
                 dispatchTakePictureIntent()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
-                showRationaleDialog(
-                    "Camera permission is needed to take photos",
-                    Manifest.permission.CAMERA
-                )
+                showRationaleDialog()
             }
             else -> {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -217,12 +185,12 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun showRationaleDialog(message: String, permission: String) {
+    private fun showRationaleDialog() {
         AlertDialog.Builder(requireContext())
             .setTitle("Permission Needed")
-            .setMessage(message)
+            .setMessage("Camera permission is needed to take photos")
             .setPositiveButton("OK") { _, _ ->
-                cameraPermissionLauncher.launch(permission)
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -235,7 +203,7 @@ class ProfileFragment : Fragment() {
             .setTitle("Select Profile Image")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> checkCameraPermissionAndLaunch()
+                    0 -> cameraPermission()
                     1 -> launchGalleryPicker()
                 }
             }
@@ -244,29 +212,33 @@ class ProfileFragment : Fragment() {
     }
 
     private fun launchGalleryPicker() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply { //запрашиваем выбор фото
             type = "image/*"
             addCategory(Intent.CATEGORY_OPENABLE)
         }
-        startActivityForResult(intent, REQUEST_IMAGE_GALLERY)
+        startActivityForResult(intent, 1001)
     }
+//    private fun launchGalleryPicker() {
+//        galleryLauncher.launch("image/*")
+//    }
 
     private fun dispatchTakePictureIntent() {
-        val photoFile = createImageFile()
-        currentPhotoUri = FileProvider.getUriForFile(
-            requireContext(),
-            "${requireContext().packageName}.provider",
-            photoFile
-        )
+        lifecycleScope.launch(Dispatchers.IO) {
+            val photoFile = createImageFile()
+            currentPhotoUri = FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.provider",
+                photoFile
+            )
 
-        try {
-            takePictureLauncher.launch(currentPhotoUri)
-        } catch (e: ActivityNotFoundException) {
-            showError("No camera app available")
-        } catch (e: SecurityException) {
-            showError("Camera permission was revoked")
-            // Запросить разрешение снова
-            checkCameraPermissionAndLaunch()
+            try {
+                takePictureLauncher.launch(currentPhotoUri)
+            } catch (e: ActivityNotFoundException) {
+                showError("No camera app available")
+            } catch (e: SecurityException) {
+                showError("Camera permission was revoked")
+                cameraPermission()
+            }
         }
     }
 
@@ -283,15 +255,11 @@ class ProfileFragment : Fragment() {
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_IMAGE_GALLERY && resultCode == Activity.RESULT_OK) {
+        if (requestCode == 1001 && resultCode == Activity.RESULT_OK) {
             data?.data?.let { uri ->
                 uploadPhotoFromUri(uri)
             }
         }
-    }
-
-    companion object {
-        private const val REQUEST_IMAGE_GALLERY = 1001
     }
 
     private fun uploadPhotoFromUri(uri: Uri) {
@@ -305,9 +273,13 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
+    }
+
 }
 
-// Расширение для преобразования Uri в File
 fun Uri.toFile(context: Context): File {
     val file = File.createTempFile(
         "temp_img_",
@@ -315,8 +287,8 @@ fun Uri.toFile(context: Context): File {
         context.cacheDir
     )
 
-    context.contentResolver.openInputStream(this)?.use { input ->
-        file.outputStream().use { output ->
+    context.contentResolver.openInputStream(this)?.use { input -> //перенос данных из юри в файл
+        file.outputStream().use { output -> //use гарантируют, что оба потока будут закрыты автоматически
             input.copyTo(output)
         }
     }

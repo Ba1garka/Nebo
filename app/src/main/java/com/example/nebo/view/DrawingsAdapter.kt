@@ -18,10 +18,7 @@ class DrawingsAdapter : ListAdapter<DrawingResponse, DrawingsAdapter.ViewHolder>
         fun bind(drawing: DrawingResponse) {
             binding.titleTextView.text = drawing.title
 
-            val imageUrl = drawing.filePath?.let { url ->
-                url.substringBefore('?')
-                    .replace("http://localhost", "http://10.0.2.2")
-            }
+            val imageUrl = drawing.filePath.substringBefore('?').replace("http://localhost", "http://10.0.2.2")
 
             Glide.with(binding.root)
                 .load(imageUrl)
