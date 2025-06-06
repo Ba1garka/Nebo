@@ -3,7 +3,9 @@ package com.example.nebo.view
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.appwidget.AppWidgetManager
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -86,6 +88,7 @@ class ProfileFragment : Fragment() {
         bind.updatePhotoButton.setOnClickListener{
             showImagePickerDialog()
         }
+
     }
 
     private fun setupObservers() {
@@ -155,7 +158,9 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = DrawingsAdapter()
+        adapter = DrawingsAdapter { imageUrl ->
+            updateWidgetsWithImage(requireContext(), imageUrl)
+        }
         bind.drawingsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = this@ProfileFragment.adapter
@@ -163,6 +168,18 @@ class ProfileFragment : Fragment() {
                 DividerItemDecoration(requireContext(), LinearLayoutManager.HORIZONTAL)
             )
         }
+    }
+
+    private fun updateWidgetsWithImage(context: Context, imageUrl: String) {
+        context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE).edit()
+            .putString("widget_image_url", imageUrl)
+            .apply()
+
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val widgetIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(context, IconWidget::class.java)
+        )
+        IconWidget.updateWidgets(context, appWidgetManager, widgetIds)
     }
 
     private fun showError(message: String) {

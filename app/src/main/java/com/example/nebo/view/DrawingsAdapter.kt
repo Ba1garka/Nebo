@@ -10,7 +10,7 @@ import com.example.nebo.R
 import com.example.nebo.databinding.ItemDrawingBinding
 import com.example.nebo.model.DrawingResponse
 
-class DrawingsAdapter : ListAdapter<DrawingResponse, DrawingsAdapter.ViewHolder>(DiffCallback()) {
+class DrawingsAdapter(private val onSetAsWidgetImage: (imageUrl: String) -> Unit) : ListAdapter<DrawingResponse, DrawingsAdapter.ViewHolder>(DiffCallback()) {
 
     inner class ViewHolder(private val binding: ItemDrawingBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -25,6 +25,10 @@ class DrawingsAdapter : ListAdapter<DrawingResponse, DrawingsAdapter.ViewHolder>
                 .placeholder(R.drawable.ic_default_avatar)
                 .error(R.drawable.ic_clear)
                 .into(binding.imageView)
+
+            binding.setAsWidgetButton.setOnClickListener {
+                onSetAsWidgetImage(imageUrl)
+            }
         }
     }
 

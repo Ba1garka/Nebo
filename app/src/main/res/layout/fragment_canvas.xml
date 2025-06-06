@@ -4,12 +4,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#EDEBEB">
 
     <com.example.nebo.view.DrawingView
         android:id="@+id/drawingView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="400dp"
+        android:layout_height="400dp"
+        android:layout_gravity="center"
         android:background="@color/white"/>
 
     <com.google.android.material.appbar.AppBarLayout
@@ -26,7 +28,7 @@
             app:menu="@menu/canvas_menu"
             app:titleTextColor="@color/black"
             app:navigationIconTint="@color/purple_100"
-            app:title="Create post"/>
+            app:title="Create note"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
