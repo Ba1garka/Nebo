@@ -26,14 +26,10 @@ class DrawingsViewModel(application: Application) : AndroidViewModel(application
                     response.body()?.let { draw ->
                         drawings.value = Result.success(draw)
                     } ?: run {
-                        drawings.value = Result.failure(Exception("Empty response body"))
+                        drawings.value = Result.failure(Exception("Empty body"))
                     }
                 } else {
-                    val error = when (response.code()) {
-                        401 -> "Unauthorized - please login again"
-                        500 -> "Server error occurred"
-                        else -> "Error fetching drawings (code ${response.code()})"
-                    }
+                    val error = "Error fetching drawings code ${response.code()}"
                     drawings.value = Result.failure(Exception(error))
                 }
             } catch (e: Exception) {
@@ -45,7 +41,6 @@ class DrawingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     private val delete = MutableLiveData<Result<Unit>>()
-    val deleteResult: LiveData<Result<Unit>> = delete
 
     fun delete(drawingId: Long) {
         viewModelScope.launch {
@@ -55,11 +50,7 @@ class DrawingsViewModel(application: Application) : AndroidViewModel(application
                     delete.value = Result.success(Unit)
                     loadUserDrawings()
                 } else {
-                    val error = when (response.code()) {
-                        404 -> "Drawing not found"
-                        403 -> "You don't have permission to delete this drawing"
-                        else -> "Error deleting drawing (code ${response.code()})"
-                    }
+                    val error = "Error deleting drawing code ${response.code()}"
                     delete.value = Result.failure(Exception(error))
                 }
             } catch (e: Exception) {

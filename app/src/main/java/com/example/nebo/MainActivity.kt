@@ -1,5 +1,8 @@
 package com.example.nebo
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -9,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.nebo.databinding.ActivityMainBinding
+import com.example.nebo.view.IconWidget
 import com.example.nebo.viewmodel.AuthViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -20,9 +24,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-
-
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
@@ -43,6 +44,10 @@ class MainActivity : AppCompatActivity() {
                     navController.navigate(R.id.canvasFragment)
                     hideBottomNavigation()
                 }
+                R.id.sendFragment -> {
+                    navController.navigate(R.id.sendFragment)
+                    showBottomNavigation()
+                }
                 R.id.exit -> performLogout()
             }
             true
@@ -51,9 +56,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun performLogout() {
         val viewModel: AuthViewModel by viewModels()
-
+        clearWidget(this)
         viewModel.logout()
-
         viewModel.logoutResult.observe(this) { result ->
             when {
                 result.isSuccess -> {
@@ -70,6 +74,17 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun clearWidget(context: Context) {
+        val prefs = context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE)
+        prefs.edit().remove("widget_image_url").apply()
+
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val widgetIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(context, IconWidget::class.java)
+        )
+        IconWidget.updateWidgets(context, appWidgetManager, widgetIds)
     }
 
     private fun clearBackStack(navController: NavController) {

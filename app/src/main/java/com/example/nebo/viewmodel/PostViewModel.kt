@@ -69,7 +69,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (response.isSuccessful) {
                     likeAction.value = Result.success(response.body()!!)
-                    loadPosts() // Обновляем список постов
+                    loadPosts()
                 } else {
                     likeAction.value = Result.failure(Exception("Failed to update like status"))
                 }

@@ -14,6 +14,11 @@
         android:title="Canvas"
         android:iconTint="@color/mdtp_dark_gray"/>
     <item
+        android:id="@+id/sendFragment"
+        android:icon="@drawable/ic_email"
+        android:title="Message"
+        android:iconTint="@color/mdtp_dark_gray"/>
+    <item
         android:id="@+id/exit"
         android:icon="@drawable/ic_exit"
         android:title="Logout"

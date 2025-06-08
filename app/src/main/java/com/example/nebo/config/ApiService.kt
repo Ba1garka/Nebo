@@ -6,6 +6,7 @@ import com.example.nebo.model.DrawingResponse
 import com.example.nebo.model.LoginRequest
 import com.example.nebo.model.PostResponse
 import com.example.nebo.model.RegisterRequest
+import com.example.nebo.model.SendDto
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
@@ -22,6 +23,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @POST("auth/login")
@@ -80,4 +82,13 @@ interface ApiService {
 
     @DELETE("drawings/{id}")
     suspend fun deleteDrawing(@Path("id") drawingId: Long): Response<Void>
+
+    @POST("sends/send")
+    suspend fun sendDrawing(
+        @Query("drawingId") drawingId: Long,
+        @Query("recipientName") recipientName: String
+    ): Response<Unit>
+
+    @GET("sends/my")
+    suspend fun getReceivedSends(): Response<List<SendDto>>
 }

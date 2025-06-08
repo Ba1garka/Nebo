@@ -33,7 +33,7 @@ class CanvasViewModel(application: Application) : AndroidViewModel(application) 
                         upload.value = Result.failure(Exception("Empty response body"))
                     }
                 } else {
-                    val errorMsg = response.errorBody()?.string() ?: "Unknown error"
+                    val errorMsg = response.errorBody()?.string()
                     upload.value = Result.failure(Exception("Server error: $errorMsg"))
                 }
             } catch (e: Exception) {

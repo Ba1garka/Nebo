@@ -5,7 +5,6 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/loginFragment">
 
-    <!-- Аутентификация -->
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.example.nebo.view.LoginFragment"
@@ -38,6 +37,9 @@
         <action
             android:id="@+id/action_profileFragment_to_postsFragment"
             app:destination="@id/postsFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_sendFragment"
+            app:destination="@id/sendFragment" />
     </fragment>
 
     <fragment
@@ -49,5 +51,9 @@
         android:id="@+id/postsFragment"
         android:name="com.example.nebo.view.PostsFragment"
         android:label="PostsFragment" />
-    
+    <fragment
+        android:id="@+id/sendFragment"
+        android:name="com.example.nebo.view.SendFragment"
+        android:label="SendFragment" />
+
 </navigation>

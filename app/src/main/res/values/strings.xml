@@ -21,4 +21,5 @@
     <string name="cancel">Cancel</string>
     <string name="size_default">size_default</string>
     <string name="widget">Здесь будут ваши рисунки</string>
+    <string name="no_sends">У вас нет сообщений</string>
 </resources>

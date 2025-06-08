@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="370dp"
     android:layout_marginHorizontal="12dp"
     android:layout_marginVertical="8dp"
     app:cardCornerRadius="12dp"
@@ -67,45 +67,6 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop" />
         </FrameLayout>
-
-        <TextView
-            android:id="@+id/postDescription"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textColor="@color/black"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageContainer"
-            tools:text="This is a beautiful artwork created with our drawing app. The description now stays properly below the image and doesn't overlap with other elements." />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/likeButton"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            app:icon="@drawable/ic_like_outline"
-            app:iconGravity="start"
-            app:iconPadding="4dp"
-            app:iconTint="@color/red"
-            android:text="@string/like"
-            android:textColor="@color/red"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/postDescription" />
-
-        <TextView
-            android:id="@+id/likesCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:textColor="@color/red"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@+id/likeButton"
-            app:layout_constraintStart_toEndOf="@+id/likeButton"
-            app:layout_constraintTop_toTopOf="@+id/likeButton"
-            tools:text="125" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

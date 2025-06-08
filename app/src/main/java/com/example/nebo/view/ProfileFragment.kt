@@ -14,36 +14,38 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.text.InputType
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.nebo.R
 import com.example.nebo.databinding.FragmentProfileBinding
 import com.example.nebo.viewmodel.AuthViewModel
 import com.example.nebo.viewmodel.AvatarViewModel
 import com.example.nebo.viewmodel.DrawingsViewModel
+import com.example.nebo.viewmodel.SendViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 
 class ProfileFragment : Fragment() {
     private var binding: FragmentProfileBinding? = null
     private val bind get() = binding!!
     private val viewModel: AuthViewModel by viewModels()
+    private val viewModelSend: SendViewModel by viewModels()
     private val viewModelDrawing: DrawingsViewModel by viewModels()
     private lateinit var adapter: DrawingsAdapter
     private val avatarViewModel: AvatarViewModel by viewModels()
@@ -157,15 +159,21 @@ class ProfileFragment : Fragment() {
                 }
             }
         }
+
+        viewModelSend.sendResult.observe(viewLifecycleOwner){ result ->
+            when {
+                result.isSuccess -> {
+                    Toast.makeText(context, "Рисунок отправлен!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun setupRecyclerView() {
-        adapter = DrawingsAdapter ({ imageUrl ->
-            updateWidgetsWithImage(requireContext(), imageUrl)
-        },
-        deleteDrawing = { drawingId ->
-            viewModelDrawing.delete(drawingId)
-        })
+        adapter = DrawingsAdapter ({ imageUrl -> updateWidgetsWithImage(requireContext(), imageUrl) },
+            { drawingId -> viewModelDrawing.delete(drawingId) },
+            { drawingId -> showDialog(drawingId) }
+        )
         bind.drawingsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = this@ProfileFragment.adapter
@@ -173,6 +181,31 @@ class ProfileFragment : Fragment() {
                 DividerItemDecoration(requireContext(), LinearLayoutManager.HORIZONTAL)
             )
         }
+    }
+
+    private fun showDialog(drawingId: Long) {
+        val dialog = AlertDialog.Builder(requireContext()).apply {
+            setTitle("Отправить рисунок")
+            setMessage("Введите имя получателя")
+
+            val input = EditText(requireContext()).apply {
+                hint = "Имя пользователя"
+                inputType = InputType.TYPE_TEXT_VARIATION_PERSON_NAME
+            }
+
+            setView(input)
+            setPositiveButton("Отправить") { _, _ ->
+                val recipientName = input.text.toString()
+                if (recipientName.isNotBlank()) {
+                    viewModelSend.sendDrawing(drawingId, recipientName)
+                } else {
+                    Toast.makeText(context, "Введите имя получателя", Toast.LENGTH_SHORT).show()
+                }
+            }
+            setNegativeButton("Отмена", null)
+        }.create()
+
+        dialog.show()
     }
 
     private fun updateWidgetsWithImage(context: Context, imageUrl: String) {

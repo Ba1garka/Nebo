@@ -9,10 +9,13 @@ import com.bumptech.glide.Glide
 import com.example.nebo.R
 import com.example.nebo.databinding.ItemDrawingBinding
 import com.example.nebo.model.DrawingResponse
+import com.example.nebo.model.SendDto
 
 class DrawingsAdapter(
+
     private val onSetAsWidgetImage: (imageUrl: String) -> Unit,
-    private val deleteDrawing: (drawingId: Long) -> Unit
+    private val deleteDrawing: (drawingId: Long) -> Unit,
+    private val sendDrawing: (drawingId: Long) -> Unit
     ) : ListAdapter<DrawingResponse, DrawingsAdapter.ViewHolder>(DiffCallback()) {
 
     inner class ViewHolder(private val binding: ItemDrawingBinding) :
@@ -31,6 +34,7 @@ class DrawingsAdapter(
 
             binding.setAsWidgetButton.setOnClickListener {
                 onSetAsWidgetImage(imageUrl)
+                sendDrawing(drawing.id)
             }
 
             binding.delete.setOnClickListener {
