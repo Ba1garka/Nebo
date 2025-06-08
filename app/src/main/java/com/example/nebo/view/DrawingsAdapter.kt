@@ -10,7 +10,10 @@ import com.example.nebo.R
 import com.example.nebo.databinding.ItemDrawingBinding
 import com.example.nebo.model.DrawingResponse
 
-class DrawingsAdapter(private val onSetAsWidgetImage: (imageUrl: String) -> Unit) : ListAdapter<DrawingResponse, DrawingsAdapter.ViewHolder>(DiffCallback()) {
+class DrawingsAdapter(
+    private val onSetAsWidgetImage: (imageUrl: String) -> Unit,
+    private val deleteDrawing: (drawingId: Long) -> Unit
+    ) : ListAdapter<DrawingResponse, DrawingsAdapter.ViewHolder>(DiffCallback()) {
 
     inner class ViewHolder(private val binding: ItemDrawingBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -28,6 +31,10 @@ class DrawingsAdapter(private val onSetAsWidgetImage: (imageUrl: String) -> Unit
 
             binding.setAsWidgetButton.setOnClickListener {
                 onSetAsWidgetImage(imageUrl)
+            }
+
+            binding.delete.setOnClickListener {
+                deleteDrawing(drawing.id)
             }
         }
     }

@@ -6,7 +6,12 @@
         android:id="@+id/action_save"
         android:icon="@drawable/ic_save"
         android:title="Сохранить"
-        app:showAsAction="always"
-        android:iconTint="@color/gray_dark"/>
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/download"
+        android:icon="@drawable/download"
+        android:title="Скачать"
+        app:showAsAction="always" />
 
 </menu>

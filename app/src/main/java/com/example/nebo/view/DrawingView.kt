@@ -9,13 +9,9 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
-
-
 import android.graphics.Path
 import android.graphics.Shader
-import android.os.Build
 import android.view.MotionEvent
-import androidx.annotation.RequiresApi
 
 class DrawingView @JvmOverloads constructor(
     context: Context,
@@ -23,7 +19,6 @@ class DrawingView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    // Параметры кисти
     data class BrushSettings(
         var color: Int = Color.BLACK,
         var size: Float = 10f,
@@ -68,11 +63,6 @@ class DrawingView @JvmOverloads constructor(
 
     fun setBrushTexture(bitmap: Bitmap?) {
         brushSettings.texture = bitmap
-        updateCurrentPaint()
-    }
-
-    fun setBrushBlur(radius: Float) {
-        brushSettings.blurRadius = radius
         updateCurrentPaint()
     }
 
@@ -151,10 +141,6 @@ class DrawingView @JvmOverloads constructor(
         }
         invalidate()
         return true
-    }
-
-    fun setCustomOnDrawListener(listener: (Canvas) -> Unit) {
-        onDrawListener = listener
     }
 
     override fun onDraw(canvas: Canvas) {

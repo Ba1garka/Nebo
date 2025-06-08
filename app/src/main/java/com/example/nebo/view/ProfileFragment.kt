@@ -6,11 +6,14 @@ import android.app.AlertDialog
 import android.appwidget.AppWidgetManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -59,13 +62,12 @@ class ProfileFragment : Fragment() {
     ) { success ->
         if (success) {
             currentPhotoUri?.let { uri ->
+                val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                intent.data = uri
+                requireContext().sendBroadcast(intent)
                 uploadPhotoFromUri(uri)
             }
         }
-    }
-
-    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { uploadPhotoFromUri(it) }
     }
 
     override fun onCreateView(
@@ -103,7 +105,7 @@ class ProfileFragment : Fragment() {
                     }
                 }
                 result.isFailure -> {
-                    showError(result.exceptionOrNull()?.message ?: "Failed to load drawings")
+                    showE(result.exceptionOrNull()?.message ?: "Failed to load drawings")
                 }
             }
         }
@@ -151,16 +153,19 @@ class ProfileFragment : Fragment() {
                     viewModel.loadUserData()
                 }
                 result.isFailure -> {
-                    showError(result.exceptionOrNull()?.message ?: "Failed to upload avatar")
+                    showE(result.exceptionOrNull()?.message ?: "Failed to upload avatar")
                 }
             }
         }
     }
 
     private fun setupRecyclerView() {
-        adapter = DrawingsAdapter { imageUrl ->
+        adapter = DrawingsAdapter ({ imageUrl ->
             updateWidgetsWithImage(requireContext(), imageUrl)
-        }
+        },
+        deleteDrawing = { drawingId ->
+            viewModelDrawing.delete(drawingId)
+        })
         bind.drawingsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = this@ProfileFragment.adapter
@@ -182,7 +187,7 @@ class ProfileFragment : Fragment() {
         IconWidget.updateWidgets(context, appWidgetManager, widgetIds)
     }
 
-    private fun showError(message: String) {
+    private fun showE(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
         Log.e("DrawingsFragment", message)
     }
@@ -233,46 +238,41 @@ class ProfileFragment : Fragment() {
             type = "image/*"
             addCategory(Intent.CATEGORY_OPENABLE)
         }
-        startActivityForResult(intent, 1001)
+        startActivityForResult(intent, 10)
     }
-//    private fun launchGalleryPicker() {
-//        galleryLauncher.launch("image/*")
-//    }
 
     private fun dispatchTakePictureIntent() {
         lifecycleScope.launch(Dispatchers.IO) {
             val photoFile = createImageFile()
-            currentPhotoUri = FileProvider.getUriForFile(
-                requireContext(),
-                "${requireContext().packageName}.provider",
-                photoFile
-            )
 
             try {
-                takePictureLauncher.launch(currentPhotoUri)
+                takePictureLauncher.launch(photoFile)
             } catch (e: ActivityNotFoundException) {
-                showError("No camera app available")
+                showE("No camera app available")
             } catch (e: SecurityException) {
-                showError("Camera permission was revoked")
+                showE("Camera permission was revoked")
                 cameraPermission()
             }
         }
     }
 
-    private fun createImageFile(): File {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val storageDir = requireContext().externalCacheDir ?: requireContext().cacheDir
-        return File.createTempFile(
-            "JPEG_${timeStamp}_",
-            ".jpg",
-            storageDir
+    private fun createImageFile(): Uri? {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "IMG_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+        }
+
+        return requireContext().contentResolver.insert(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            contentValues
         )
     }
 
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 1001 && resultCode == Activity.RESULT_OK) {
+        if (requestCode == 10 && resultCode == Activity.RESULT_OK) {
             data?.data?.let { uri ->
                 uploadPhotoFromUri(uri)
             }
@@ -285,7 +285,7 @@ class ProfileFragment : Fragment() {
                 val file = uri.toFile(requireContext())
                 avatarViewModel.uploadAvatar(file)
             } catch (e: Exception) {
-                showError("Ошибка при обработке изображения: ${e.message}")
+                showE("Ошибка при обработке изображения: ${e.message}")
             }
         }
     }

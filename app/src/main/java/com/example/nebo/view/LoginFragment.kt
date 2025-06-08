@@ -53,11 +53,7 @@ class LoginFragment : Fragment() {
                     findNavController().navigate(R.id.action_loginFragment_to_profileFragment)
                 }
                 result.isFailure -> {
-                    Toast.makeText(
-                        context,
-                        result.exceptionOrNull()?.message ?: "Login failed",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(context, result.exceptionOrNull()?.message ?: "Login failed", Toast.LENGTH_SHORT).show()
                 }
             }
         }

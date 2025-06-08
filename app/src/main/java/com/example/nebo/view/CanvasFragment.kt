@@ -2,10 +2,15 @@ package com.example.nebo.view
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.ContentValues
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.*
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -190,8 +195,42 @@ class CanvasFragment : Fragment() {
                         saveDrawing()
                         true
                     }
+                    R.id.download -> {
+                        saveInGallery()
+                        true
+                    }
                     else -> false
                 }
+            }
+        }
+    }
+
+    private fun saveInGallery() {
+        bind.progressBar.visibility = View.VISIBLE
+        val bitmap = createBitmapFromView(bind.drawingView)
+
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "drawing_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+        }
+        val resolver = requireContext().contentResolver
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+        try {
+            if (uri != null) {
+                resolver.openOutputStream(uri)?.use { outputStream ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                }
+            }
+            //  уведомляем
+            val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+            intent.data = uri
+            requireContext().sendBroadcast(intent)
+            bind.progressBar.visibility = View.GONE
+        } catch (e: Exception) {
+            if (uri != null) {
+                resolver.delete(uri, null, null)
             }
         }
     }
@@ -211,10 +250,10 @@ class CanvasFragment : Fragment() {
                 )
 
                 viewModel.uploadDrawing(body)
-                showMessage("Рисунок сохранен!")
+                showT("Рисунок сохранен!")
             } catch (e: Exception) {
                 bind.progressBar.visibility = View.GONE
-                showMessage("Ошибка: ${e.message}")
+                showT("Ошибка: ${e.message}")
             }
         }
     }
@@ -244,11 +283,11 @@ class CanvasFragment : Fragment() {
             when {
                 result.isSuccess -> {
                     bind.progressBar.visibility = View.GONE
-                    showMessage("Рисунок сохранен")
+                    showT("Рисунок сохранен")
                 }
                 result.isFailure -> {
                     bind.progressBar.visibility = View.GONE
-                    showMessage(result.exceptionOrNull()?.message ?: "Ошибка сохранения")
+                    showT(result.exceptionOrNull()?.message ?: "Ошибка сохранения")
                     Log.e("CanvasFragment", "Upload error", result.exceptionOrNull())
                 }
             }
@@ -259,7 +298,7 @@ class CanvasFragment : Fragment() {
         }
     }
 
-    private fun showMessage(text: String) {
+     private fun showT(text: String) {
         Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show()
     }
 

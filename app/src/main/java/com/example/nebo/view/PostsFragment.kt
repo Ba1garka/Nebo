@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.nebo.viewmodel.DrawingsViewModel
 import com.example.nebo.databinding.FragmentPostsBinding
 import com.example.nebo.viewmodel.PostViewModel
-import com.google.android.material.snackbar.Snackbar
 
 
 class PostsFragment : Fragment() {
@@ -77,7 +76,7 @@ class PostsFragment : Fragment() {
                     }
                 }
                 result.isFailure -> {
-                    showError(result.exceptionOrNull()?.message ?: "Error loading posts")
+                    showE(result.exceptionOrNull()?.message ?: "Error loading posts")
                 }
             }
             bind.swipeRefresh.isRefreshing = false
@@ -111,7 +110,7 @@ class PostsFragment : Fragment() {
         viewModel.likeActionResult.observe(viewLifecycleOwner) { result ->
             when {
                 result.isFailure -> {
-                    showError("Like action failed: ${result.exceptionOrNull()?.message}")
+                    showE("Like action failed: ${result.exceptionOrNull()?.message}")
                     viewModel.loadPosts()
                 }
                 result.isSuccess -> {
@@ -126,7 +125,7 @@ class PostsFragment : Fragment() {
         bind.postsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
     }
 
-    private fun showError(message: String) {
+    private fun showE(message: String) {
         Log.e("POSTS", message)
     }
 
