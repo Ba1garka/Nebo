@@ -93,6 +93,8 @@ class ProfileFragment : Fragment() {
             showImagePickerDialog()
         }
 
+        context?.let { viewModelSend.loadReceivedSends(it) }
+
     }
 
     private fun setupObservers() {
@@ -129,6 +131,12 @@ class ProfileFragment : Fragment() {
                                 .circleCrop()
                                 .into(avatarImageView)
                         }
+
+                        val appWidgetManager = AppWidgetManager.getInstance(context)
+                        val widgetIds = appWidgetManager.getAppWidgetIds(
+                            context?.let { ComponentName(it, IconWidget::class.java) }
+                        )
+                        context?.let { IconWidget().onUpdate(it, appWidgetManager, widgetIds) }
                     }
                 }
                 result.isFailure -> {
@@ -165,6 +173,13 @@ class ProfileFragment : Fragment() {
                 result.isSuccess -> {
                     Toast.makeText(context, "Рисунок отправлен!", Toast.LENGTH_SHORT).show()
                 }
+            }
+        }
+
+        viewModelSend.widgetResult.observe(viewLifecycleOwner) { imageUrl ->
+            imageUrl?.let { url ->
+                updateWidgetsWithImage(requireContext(), url)
+                Log.d("ProfileFragment", "Обновлён виджет : $url")
             }
         }
     }

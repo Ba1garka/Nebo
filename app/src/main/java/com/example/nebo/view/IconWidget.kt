@@ -4,10 +4,15 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Build
+
 import android.util.Log
 import android.widget.RemoteViews
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.example.nebo.R
 
 class IconWidget : AppWidgetProvider() {
@@ -27,33 +32,36 @@ class IconWidget : AppWidgetProvider() {
             Log.i("WIDGET", "imageurl:" + imageUrl)
             appWidgetIds.forEach { appWidgetId ->
 
-                val views = RemoteViews(context.packageName, R.layout.widget_icon).apply {
+                val views = RemoteViews(context.packageName, R.layout.widget_icon)
 
-                    if(imageUrl != null) {
-                        imageUrl.let { url ->
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                try {
-                                    val bitmap = Glide.with(context)
-                                        .asBitmap()
-                                        .load(url)
-                                        .submit()
-                                        .get()
-                                    setImageViewBitmap(R.id.widget_icon, bitmap)
-                                } catch (e: Exception) {
-                                    setImageViewResource(
-                                        R.id.widget_icon,
-                                        android.R.color.transparent
-                                    )
+                if (imageUrl != null) {
+                    try {
+                        Glide.with(context)
+                            .asBitmap()
+                            .load(imageUrl)
+                            .into(object : CustomTarget<Bitmap>() {
+                                override fun onResourceReady(
+                                    resource: Bitmap,
+                                    transition: Transition<in Bitmap>?
+                                ) {
+                                    views.setImageViewBitmap(R.id.widget_icon, resource)
+                                    appWidgetManager.updateAppWidget(appWidgetId, views)
                                 }
-                            }
-                        }
-                    } else {
-                        setImageViewResource(
-                            R.id.widget_icon,
-                            android.R.color.transparent
-                        )
+
+                                override fun onLoadCleared(placeholder: Drawable?) {
+                                    views.setImageViewResource(R.id.widget_icon, android.R.color.transparent)
+                                    appWidgetManager.updateAppWidget(appWidgetId, views)
+                                }
+                            })
+                    } catch (e: Exception) {
+                        views.setImageViewResource(R.id.widget_icon, android.R.color.transparent)
+                        appWidgetManager.updateAppWidget(appWidgetId, views)
                     }
+                } else {
+                    views.setImageViewResource(R.id.widget_icon, android.R.color.transparent)
+                    appWidgetManager.updateAppWidget(appWidgetId, views)
                 }
+
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             }

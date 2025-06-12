@@ -42,8 +42,7 @@ class SendFragment : Fragment() {
         setupRefresh()
         setupObservers()
 
-        viewModel.loadReceivedSends()
-        viewModel.loadReceivedSends()
+        viewModel.loadReceivedSends(requireContext())
     }
 
     private fun setupRecyclerView() {
@@ -91,25 +90,22 @@ class SendFragment : Fragment() {
 
     private fun updateWidgetsWithImage(context: Context, imageUrl: String) {
         context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE).edit()
-            .putString("widget_image_url", imageUrl)
-            .apply()
+            .putString("widget_image_url", imageUrl).apply()
 
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        val widgetIds = appWidgetManager.getAppWidgetIds(
-            ComponentName(context, IconWidget::class.java)
-        )
+        val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, IconWidget::class.java))
         IconWidget.updateWidgets(context, appWidgetManager, widgetIds)
     }
 
     private fun setupRefresh() {
         bind.swipeRefresh.setOnRefreshListener {
-            viewModel.loadReceivedSends()
+            viewModel.loadReceivedSends(requireContext())
             bind.swipeRefresh.isRefreshing = false
         }
     }
 
     private fun showDrawingDetails(send: SendDto) {
-        // Реализуйте открытие деталей рисунка
+        // открытие деталей
     }
 
     override fun onDestroyView() {
