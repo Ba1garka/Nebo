@@ -3,17 +3,23 @@ package com.example.nebo
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.nebo.databinding.ActivityMainBinding
 import com.example.nebo.view.IconWidget
+import com.example.nebo.view.SendService
 import com.example.nebo.viewmodel.AuthViewModel
+import android.Manifest
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -29,12 +35,14 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
 
         hideBottomNavigation()
+        notificationPermission()
 
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.profileFragment -> {
                     navController.navigate(R.id.profileFragment)
                     showBottomNavigation()
+
                 }
                 R.id.postsFragment -> {
                     navController.navigate(R.id.postsFragment)
@@ -54,10 +62,48 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun notificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED -> {
+                    startService()
+                }
+                else -> {
+                    requestPermissionLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                }
+            }
+        } else {
+            // для версий ниже 13
+            startService()
+        }
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            startService()
+        } else {
+            Toast.makeText(this, "Уведомления отключены", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun startService() {
+        val intent = Intent(this, SendService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
     private fun performLogout() {
         val viewModel: AuthViewModel by viewModels()
         clearWidget(this)
         viewModel.logout()
+        SendService.stop(this)
         viewModel.logoutResult.observe(this) { result ->
             when {
                 result.isSuccess -> {
@@ -91,14 +137,14 @@ class MainActivity : AppCompatActivity() {
 
         val startDest = navController.graph.startDestinationId
 
-        // Очищаем стек до исходного фрагмента
+        // Очищаем до исходного фрагмента
         while (navController.currentDestination?.id != startDest) {
             if (!navController.popBackStack()) {
                 break
             }
         }
 
-        //на случай если startDestination не первый в стеке
+        // если startDestination не первый в стеке
         while (navController.popBackStack()) {
             //
         }

@@ -51,17 +51,13 @@ class ProfileFragment : Fragment() {
     private val avatarViewModel: AvatarViewModel by viewModels()
     private var currentPhotoUri: Uri? = null
 
-    private val cameraPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { success ->
+    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { success ->
         if (success) {
             dispatchTakePictureIntent()
         }
     }
 
-    private val takePictureLauncher = registerForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { success ->
+    private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
             currentPhotoUri?.let { uri ->
                 val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
@@ -92,8 +88,6 @@ class ProfileFragment : Fragment() {
         bind.updatePhotoButton.setOnClickListener{
             showImagePickerDialog()
         }
-
-        context?.let { viewModelSend.loadReceivedSends(it) }
 
     }
 
@@ -132,11 +126,6 @@ class ProfileFragment : Fragment() {
                                 .into(avatarImageView)
                         }
 
-                        val appWidgetManager = AppWidgetManager.getInstance(context)
-                        val widgetIds = appWidgetManager.getAppWidgetIds(
-                            context?.let { ComponentName(it, IconWidget::class.java) }
-                        )
-                        context?.let { IconWidget().onUpdate(it, appWidgetManager, widgetIds) }
                     }
                 }
                 result.isFailure -> {
@@ -176,12 +165,6 @@ class ProfileFragment : Fragment() {
             }
         }
 
-        viewModelSend.widgetResult.observe(viewLifecycleOwner) { imageUrl ->
-            imageUrl?.let { url ->
-                updateWidgetsWithImage(requireContext(), url)
-                Log.d("ProfileFragment", "Обновлён виджет : $url")
-            }
-        }
     }
 
     private fun setupRecyclerView() {
@@ -242,28 +225,13 @@ class ProfileFragment : Fragment() {
 
     private fun cameraPermission() {
         when {
-            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
                 dispatchTakePictureIntent()
-            }
-            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
-                showRationaleDialog()
             }
             else -> {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
         }
-    }
-
-    private fun showRationaleDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Permission Needed")
-            .setMessage("Camera permission is needed to take photos")
-            .setPositiveButton("OK") { _, _ ->
-                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
     }
 
     private fun showImagePickerDialog() {
